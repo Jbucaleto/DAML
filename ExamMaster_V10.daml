@@ -1,0 +1,152 @@
+daml 1.2 module CreateExam where
+
+type CoverId = ContractId Cover_Owner
+type ExamId = ContractId Exam
+type ExamP = ContractId Exam_P_Accept
+
+-- This should be the original contract
+-- 2nd action
+template Exam
+    with
+        owner : Party
+        issuer: Party
+        original_price : Decimal
+        price_to_pay: Decimal
+        chancellor: Party
+        exam_text: Text
+        new_text: Text
+    where    
+        signatory issuer
+        signatory chancellor
+
+        ensure price_to_pay >= 0.0
+
+        controller owner can
+            Accept_Exam : ContractId Exam_Pay
+                do 
+                    create Exam_Pay
+                        with exam=this
+
+            Reject_Exam
+                : ()
+                do return ()
+
+--3rd action    
+template Exam_Pay
+    with
+        exam: Exam
+    where
+        signatory exam.owner
+        signatory exam.chancellor
+
+        controller exam.owner can
+            Pay_Exam: ExamP
+                with payment: Decimal
+                do
+                    assert (payment == exam.price_to_pay)
+                    create Exam_P_Accept with price_paid = payment;owner = exam.owner; issuer = exam.issuer; chancellor = exam.chancellor; original_price = exam.original_price --; exam_text = exam.exam_text
+                    
+            Reject_Pay: ()
+                do return ()
+
+--4th action
+template Exam_P_Accept
+    with
+        owner : Party
+        issuer: Party
+        original_price: Decimal
+        price_paid : Decimal
+        chancellor: Party
+
+    where    
+        signatory owner
+        signatory chancellor
+
+        ensure price_paid >= 0.0
+
+        controller chancellor can
+            Accept_Payment: CoverId
+                with ownerID: CoverId
+                do
+                    ownD <- fetch ownerID
+
+                    assert (owner == ownD.owner)
+                    exercise ownerID Archive
+                    create Cover_Owner with coin = (ownD.coin - price_paid); owner =ownD.owner; coverage = ownD.coverage; chancellor = ownD.chancellor
+
+
+
+-- 1st action
+template Exam_Proposal
+  with
+    owner : Party
+    issuer: Party
+    price : Decimal
+    chancellor: Party
+    exam_text: Text
+  where
+    signatory issuer
+    observer chancellor
+
+    controller chancellor can
+        Accept_New_Exam
+            : ExamId
+            with coverowner: CoverId
+            do
+                co <- fetch coverowner
+
+                assert (owner == co.owner)
+                if (co.coverage == "Top1") then
+                    create Exam with
+                        original_price = price; price_to_pay = (price * 0.0); owner; issuer; chancellor; exam_text; new_text = "Total cover of the exam."
+                    else do
+                    create Exam with
+                        original_price = price; price_to_pay = (price * 0.25); owner; issuer; chancellor; exam_text; new_text = "The owner has to pay just about 75% off from the exam price."
+    
+        Reject_New_Exam
+            : ()
+            do return ()
+
+
+
+-- You have to start this one . This is the template 0.0
+template Cover_Owner
+    with
+        owner : Party
+        coin: Decimal
+        coverage: Text
+        chancellor: Party
+    where
+        signatory chancellor
+        observer owner
+
+
+makePartiesFrom names =
+  mapA getParty names
+
+examTest : Scenario ()
+examTest =
+     scenario do
+
+        [issuer, owner, chancellor] <- makePartiesFrom ["Doctor", "Jorge", "Insurance_Company"]
+        
+        -- Creating the  Owner
+        creatOwner <- chancellor `submit` do create Cover_Owner with owner; coin=1000.0; coverage="Top2"; chancellor
+        
+        -- -- Starting an exam to the Owner
+        creatProp <- issuer `submit` do create Exam_Proposal with owner; issuer; price=145.0; chancellor; exam_text = "X-Ray"
+        
+        -- --1st action // chancellor accepts the new exam requested by Doctor
+        examID <- chancellor `submit` do exercise creatProp Accept_New_Exam with coverowner = creatOwner
+        
+        -- --2nd action // owner accepts the exam passed by chancellor
+        examProp <- owner `submit` do exercise examID Accept_Exam
+        
+        -- --3rd action // owner pays the exam -> this one goes to chancellor to approval
+        examPay <- owner `submit` do exercise examProp Pay_Exam with payment=36.25
+
+        -- --4th action // chancellor approves the payment and the coins from owner have been charged
+        examPAccept <- chancellor `submit` do exercise examPay Accept_Payment with ownerID = creatOwner
+
+
+        return()
