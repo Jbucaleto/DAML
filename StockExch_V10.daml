@@ -1,0 +1,259 @@
+daml 1.2 module StockExch where
+
+type W2S = ContractId Willing2Sell
+type Port = ContractId Portfolio
+type Wallt = ContractId Wallet
+type STK = ContractId Stocks
+type W2B = ContractId OwnerAccept
+type UID = ContractId UserID
+type PT = ContractId Pay_Taxes
+type RM = ContractId Receiving_Money
+type PST = ContractId Pay_Sell_Taxes
+
+    
+-- 1st flow - should to create an ID at first
+template UserID
+    with
+        owner: Party
+    where
+        signatory owner
+
+        controller owner can
+            nonconsuming Create_Wallet: (Wallt)
+                with cash: Decimal
+                do
+                    create Wallet with owner; cash
+
+--2nd flow - create the Wallet from the userID
+template Wallet
+    with
+        owner: Party
+        cash: Decimal
+    where
+        ensure
+            cash >= 0.0
+        signatory owner
+        observer owner
+
+-- 3rd flow - an user creates its stocks.
+template Stocks
+    with
+        owner: Party
+        symbol: Text
+        description: Text
+        qty_shares: Int
+        price_per_share: Decimal
+    where
+        signatory owner
+
+        ensure
+            qty_shares >= 0
+
+        -- The owner sets its stocks to sell (Willing2Sell)
+        controller owner can
+            Sell_Shares : (W2S, STK)
+                with quantity_shares : Int;
+                       stockExchange : Party
+                do
+                    assertMsg "You're not able to sell your stocks." (quantity_shares > 0)
+                    w <- create Willing2Sell with seller = owner; symbol; description; qty_sell = quantity_shares; price_per_share; stock_exchange = stockExchange
+
+                    let sumQty_shares = (qty_shares - quantity_shares)
+                    s <- create Stocks with qty_shares = sumQty_shares; owner; symbol; description; price_per_share
+
+                    return (w, s)
+
+--4th flow, user is willing to sell some shares from its available stocks
+template Willing2Sell
+    with
+        seller: Party
+        symbol: Text
+        description: Text
+        qty_sell: Int
+        price_per_share: Decimal
+        stock_exchange: Party
+    where
+        signatory seller
+
+        -- All users can check what is being sold by using the stock_exchange ID, and then, choose how many shares want to buy
+        controller stock_exchange can
+            Buy_Stocks: (W2B, W2S)
+                with new_Owner: Party
+                     new_shares: Int
+                do
+                    let totalBuy = ((intToDecimal new_shares) * price_per_share)
+                    let qtySell = (qty_sell - new_shares)
+                    p <- create OwnerAccept with symbol; description; price_per_share; new_owner = new_Owner; new_shares = new_shares; total_buy = totalBuy; stock_exchange; old_owner = seller
+                    ws <- create Willing2Sell with qty_sell = qtySell; seller; symbol; description; price_per_share; stock_exchange
+
+                    return (p, ws)
+
+--5th flow - the user that choose how many shares wants to buy, log into system using your own ID
+template OwnerAccept
+    with
+        old_owner: Party
+        symbol: Text
+        description: Text
+        price_per_share: Decimal
+        new_owner: Party
+        new_shares: Int
+        total_buy: Decimal
+        stock_exchange: Party
+    where
+        signatory stock_exchange
+
+        -- New owner accepts the buy action before
+        controller new_owner can
+            Accept_Buy: PT
+                do
+                    let taxes = 0.01
+                    let totalPay = total_buy + (total_buy * taxes)
+                    payTaxes <- create Pay_Taxes with seller = old_owner; new_owner; symbol; description; price_per_share; total_shares = new_shares; total_buy; taxes; total_pay = totalPay
+
+                    return (payTaxes)
+
+--6th flow, in this template is shown to user your choosen shares and the taxes that will be applied
+template Pay_Taxes
+    with
+        seller: Party
+        new_owner: Party
+        symbol: Text
+        description: Text
+        price_per_share: Decimal
+        total_shares: Int
+        total_buy: Decimal
+        taxes: Decimal
+        total_pay: Decimal
+    where
+        signatory new_owner
+        
+        -- If the new owner accepts to pay the taxes, his portfolio is being created, along with the amount deducted from its wallet
+        -- Also, the amount that was paid (without the taxes) goes to seller
+        controller new_owner can
+            Pay_the_Taxes : (Port, Wallt, RM)
+                with your_Wallet: Wallt
+                    do
+                        wallown <- fetch your_Wallet
+
+                        assertMsg "Sorry, mate. You have to use the right owner of the account" (wallown.owner == new_owner)
+                        p <- create Portfolio with owner = new_owner; symbol; description; price_per_share; qty_shares = total_shares; total_v_share = total_buy
+
+                        assert (wallown.owner == new_owner)
+                        wa <- create Wallet with owner = new_owner; cash = (wallown.cash - total_pay)
+
+                        exercise your_Wallet Archive
+
+                        receiveMoney <- create Receiving_Money with seller; buyer = new_owner; total_receive = total_buy
+
+                        return (p, wa, receiveMoney)
+
+--7th flow, the portfolio from the owner created
+template Portfolio
+    with
+        owner: Party
+        symbol: Text
+        description: Text
+        qty_shares: Int
+        price_per_share: Decimal
+        total_v_share: Decimal
+    where
+        signatory owner
+
+        ensure
+            qty_shares >= 0
+        
+        -- controller owner can
+        --     SellShares: (W2S, Port)
+        --         with new_shares: Decimal
+        --         do
+        --             smys <- create Willing2Sell with stock_owner = owner; symbol; description; qty_sell = new_shares; price_per_share; stock_exchange
+
+        --             chgmyport <- create Portfolio with qty_shares =  (qty_shares - new_shares); total_v_share = ((qty_shares - new_shares) * price_per_share); owner; symbol; description; price_per_share; corporation; stock_exchange
+
+
+        --             return (smys, chgmyport)
+
+
+-- The seller log into and checks the money that have to receive due the shares sold
+template Receiving_Money
+    with
+        seller: Party
+        buyer: Party
+        total_receive: Decimal
+    where
+        signatory buyer
+
+        -- If the seller accepts the received money, a new template will be created to show the taxes 
+        controller seller can
+            Accept_Sell: PST
+                do
+                    paySTaxes <- create Pay_Sell_Taxes with seller; total_receive; taxes = 0.01
+
+                    return (paySTaxes)
+
+-- Also, the wallet from the seller will be merged along the amount from the shares sold out
+template Pay_Sell_Taxes
+    with
+        seller: Party
+        total_receive: Decimal
+        taxes: Decimal
+    where
+        signatory seller
+
+        controller seller can
+            Pay_Seller_Taxes : Wallt
+                with your_Wallet: Wallt
+                do
+                    wallSell <- fetch your_Wallet
+                    assert (wallSell.owner == seller)
+                    sellerMoney <- create Wallet with owner = seller; cash = (wallSell.cash + total_receive) - taxes
+
+                    exercise your_Wallet Archive
+
+                    return (sellerMoney)
+
+
+makePartiesFrom names = 
+    mapA getParty names
+
+
+stockTest :  Scenario ()
+stockTest =
+    scenario do
+        -- Defining the actors for the scenario test
+        [owner, stock_exchange] <- makePartiesFrom ["Bruce", "DC_Market"]
+        [owner2] <- makePartiesFrom ["Clark"]
+
+        -- creating the ID
+        creatBruce <- submit owner do create UserID with owner
+        creatClark <- submit owner2 do create UserID with owner = owner2
+
+
+        -- Creating the Wallet
+        creatWallet <- submit owner do exercise creatBruce Create_Wallet with cash = 13000.0
+        creatWallet2 <- submit owner2 do exercise creatClark Create_Wallet with cash = 1000.0
+
+
+        -- Creating Stock
+        creatStock <- submit owner do create Stocks with owner ; symbol = "SPOT"; description = "Spotify"; qty_shares = 1000; price_per_share = 130.0
+
+        --1st flow after the system have some stocks available, the seller will define how many shares will to sell
+        (creatW2S, creatNStocks) <- submit owner do exercise creatStock Sell_Shares with quantity_shares = 100; stockExchange = stock_exchange
+
+        --2nd flow - Buying stocks that are willing to sell, using the stock_exchange ID
+        (creatOwnAccept, creatNW2S) <- submit stock_exchange do exercise creatW2S Buy_Stocks with new_Owner = owner2; new_shares = 7
+        
+        -- The buyer accepts the new shares choosen
+        creatPTaxes <- submit owner2 do exercise creatOwnAccept Accept_Buy
+        
+        -- The buyer pay the taxes
+        (creatPort, creatNWallet, creatRMoney) <- submit owner2 do exercise creatPTaxes Pay_the_Taxes with your_Wallet = creatWallet2
+
+        -- The seller accepts the money from the shares sold out
+        creatMoney <- submit owner do exercise creatRMoney Accept_Sell
+
+        -- The money received is merged to the wallet from the seller, minus the taxes paied.
+        creatSRMoney <- submit owner do exercise creatMoney Pay_Seller_Taxes with your_Wallet = creatWallet
+
+
+        return ()
