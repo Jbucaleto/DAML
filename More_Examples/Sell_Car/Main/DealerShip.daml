@@ -1,0 +1,14 @@
+daml 1.2 module DealerShip where
+
+type DS = ContractId DealerShippa
+
+
+template DealerShippa
+  with
+    seller: Party
+    company : [Party]
+  where
+    signatory seller
+    observer company
+    
+

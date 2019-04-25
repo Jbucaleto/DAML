@@ -1,6 +1,6 @@
 project:
   sdk-version: 0.12.1
-  scenario: SellCar.TestSell
+  # scenario: SellCar.TestSell
   name: DAML/More_Examples/Sell_Car
   source: Main/SellCar.daml
   parties:

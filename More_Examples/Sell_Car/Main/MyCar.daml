@@ -1,0 +1,23 @@
+daml 1.2 module MyCar where
+
+import DealerShip
+
+type MC = ContractId MyCar
+
+template MyCar
+    with
+        seller : Party
+        car: Text
+    where
+
+    signatory seller
+
+    controller seller can
+      nonconsuming Sell_my_Car : DS
+        with dealersh : [Party]
+        do
+            ds <- create DealerShippa with company = dealersh; seller
+
+            return (ds)
+          
+    

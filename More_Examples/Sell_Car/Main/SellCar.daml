@@ -1,0 +1,24 @@
+daml 1.2 module SellCar where
+
+import MyCar
+
+template UserID
+  with
+    seller : Party
+    typeSB: Text
+  where
+    signatory seller
+
+
+    controller seller can
+         nonconsuming My_Car : MC
+           with car : Text
+           do
+            if (typeSB == "Seller")
+                then return True
+                else do
+                    meCar <- create MyCar with seller; car = car
+                    return (meCar)
+          
+
+    
