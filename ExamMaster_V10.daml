@@ -130,22 +130,22 @@ examTest =
 
         [issuer, owner, chancellor] <- makePartiesFrom ["Doctor", "Jorge", "Insurance_Company"]
         
-        -- Creating the  Owner
+        -- Creating the  Owner.
         creatOwner <- chancellor `submit` do create Cover_Owner with owner; coin=1000.0; coverage="Top2"; chancellor
         
-        -- -- Starting an exam to the Owner
+        -- -- Starting an exam to the Owner.
         creatProp <- issuer `submit` do create Exam_Proposal with owner; issuer; price=145.0; chancellor; exam_text = "X-Ray"
         
-        -- --1st action // chancellor accepts the new exam requested by Doctor
+        -- --1st action // chancellor accepts the new exam requested by the Doctor.
         examID <- chancellor `submit` do exercise creatProp Accept_New_Exam with coverowner = creatOwner
         
-        -- --2nd action // owner accepts the exam passed by chancellor
+        -- --2nd action // owner accepts the exam passed by chancellor.
         examProp <- owner `submit` do exercise examID Accept_Exam
         
-        -- --3rd action // owner pays the exam -> this one goes to chancellor to approval
+        -- --3rd action // owner pays the exam -> this one goes to chancellor to approval.
         examPay <- owner `submit` do exercise examProp Pay_Exam with payment=36.25
 
-        -- --4th action // chancellor approves the payment and the coins from owner have been charged
+        -- --4th action // chancellor approves the payment and the coins from owner have been charged.
         examPAccept <- chancellor `submit` do exercise examPay Accept_Payment with ownerID = creatOwner
 
 

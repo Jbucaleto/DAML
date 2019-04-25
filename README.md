@@ -8,3 +8,5 @@ DAML (Digital Asset Model Language) - Functional language for Smart Contracts
 - The payment back to the Insurance company that analyzes and accepts it.
 
 <b>StockExhange.daml</b> -> Version 1.0 of trade action between a seller and a buyer. The main focus on this script is that both wallets from seller and buyer don't came cross in the system and only the owner of each one are able to visualize it.
+
+[http://daml.com]
