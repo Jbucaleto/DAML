@@ -34,6 +34,13 @@ template Pending
             Bank_Sign: PnD
                 do
                     create this with bank = agree.bank
+        
+        controller seller can
+            Sell_my_Car: DS
+                with dealer_ship: [Party]
+                do
+                assert (seller == agree.seller && evaluator == agree.evaluator && bank == agree.bank)
+                create DealerShippa with seller; company = dealer_ship 
 
 
 
