@@ -16,15 +16,15 @@ sellTest =
 
     creatBruce <- submit user do create UserID with user
 
-    let agree = MyCar with seller = user; agree = "Volvo"; evaluator; bank
-    agree <- user `submit` do create Pending with agree; seller = user; evaluator = user; bank = user
+    let sell_price = 35800.0
+    let agree = MyCar with seller = user; vehicle = "Volvo"; sell_price; evaluator; bank
+    agree <- user `submit` do create Pending with agree; sell_price; seller = user; evaluator = user; bank = user
 
     agree <- evaluator `submit` do exercise agree Eva_Sign
 
     agree <- bank `submit` do exercise agree Bank_Sign
 
     let compania = [company1, company2]
-    user `submit` do exercise agree Sell_my_Car with dealer_ship = compania
-    -- (creatBruceCar) <- submit user do exercise creatBruce Sell_Car with car = "Volvo"; evaluator; bank
+    creatBruceCar <- user `submit` do exercise agree Sell_my_Car with dealer_ship = compania
 
     return ()

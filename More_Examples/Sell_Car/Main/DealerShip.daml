@@ -6,9 +6,15 @@ type DS = ContractId DealerShippa
 template DealerShippa
   with
     seller: Party
+    vehicle: Text
+    sell_price: Decimal
     company : [Party]
   where
     signatory seller
-    observer company
+    -- observer company
     
+    controller company can
+      Call : ()
+        do return ()
+          
 

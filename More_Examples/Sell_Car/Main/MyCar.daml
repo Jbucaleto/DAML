@@ -8,17 +8,19 @@ type PnD = ContractId Pending
 template MyCar
     with
         seller : Party
-        agree: Text
+        vehicle: Text
+        sell_price: Decimal
         evaluator: Party
         bank: Party
     where
 
     signatory seller, evaluator, bank
-    agreement agree
+    agreement vehicle
 
 template Pending
     with
         agree: MyCar
+        sell_price: Decimal
         seller: Party
         evaluator: Party
         bank: Party
@@ -39,8 +41,9 @@ template Pending
             Sell_my_Car: DS
                 with dealer_ship: [Party]
                 do
+
                 assert (seller == agree.seller && evaluator == agree.evaluator && bank == agree.bank)
-                create DealerShippa with seller; company = dealer_ship 
+                create DealerShippa with seller; vehicle = agree.vehicle; sell_price; company = dealer_ship
 
 
 

@@ -16,12 +16,13 @@ template UserID
     controller user can
         --  nonconsuming Sell_Car : (MC, Wallt)
          nonconsuming Sell_Car : PnD
-           with car : Text
+           with vehicle : Text
+                sell_price: Decimal
                 evaluator: Party
                 bank: Party
            do
-                let agree = MyCar with seller = user; agree = car; evaluator = evaluator; bank = bank
-                agree <- create Pending with agree; seller = user; evaluator = user; bank = user
+                let agree = MyCar with seller = user; vehicle = vehicle; sell_price = sell_price; evaluator = evaluator; bank = bank
+                agree <- create Pending with agree; sell_price = sell_price; seller = user; evaluator = user; bank = user
                 -- mecar <- create MyCar with seller = user; agree = car; evaluator = evaluator; bank = bank
                 -- walter <- create Wallet with owner = user; cash = 0.0
 
