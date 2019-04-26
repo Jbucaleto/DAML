@@ -5,7 +5,7 @@ project:
   source: Main/YourID.daml
   parties:
   - Bruce
-  - Wayne_corp
+  - Wayne_Corp
   - Bank_of_Gotham
   - Marvel_Car
   - DC_Car
