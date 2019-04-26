@@ -39,7 +39,7 @@ template Pending
         
         controller seller can
             Sell_my_Car: DS
-                with dealer_ship: [Party]
+                with dealer_ship : [Party]
                 do
 
                 assert (seller == agree.seller && evaluator == agree.evaluator && bank == agree.bank)

@@ -1,7 +1,7 @@
 daml 1.2 module Main.DealerShip where
 
 type DS = ContractId DealerShippa
-
+type COF = ContractId Company_Offer
 
 template DealerShippa
   with
@@ -13,8 +13,29 @@ template DealerShippa
     signatory seller
     -- observer company
     
+    controller seller can
+      Add_More_Dealers : DS
+        with new_dealer : Party
+            do create this with company = new_dealer :: company
+
     controller company can
-      Call : ()
-        do return ()
+        Accept_Sell: COF
+            do 
+                let compania = [company]
+                create Company_Offer with seller; vehicle; company 
+
+template Company_Offer
+    with 
+        seller: Party
+        company: Party
+        vehicle: Text
+    where
+        signatory company
+
+
+
+    
+
+            
           
 

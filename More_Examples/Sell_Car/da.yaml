@@ -1,8 +1,8 @@
 project:
   sdk-version: 0.12.1
-  # scenario: Test/SellTest.sellTest.daml
+  scenario: Test.SellTest:sellTest
   name: DAML/More_Examples/Sell_Car
-  source: Main/YourID.daml
+  source: Test/SellTest.daml
   parties:
   - Bruce
   - Wayne_Corp
