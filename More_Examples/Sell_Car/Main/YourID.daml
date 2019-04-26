@@ -1,0 +1,42 @@
+daml 1.2 module Main.YourID where
+
+import Main.MyCar
+import Main.Wallet
+
+type ID = ContractId UserID
+
+template UserID
+  with
+    user : Party
+    -- typeSB: Text
+  where
+    signatory user
+
+
+    controller user can
+        --  nonconsuming Sell_Car : (MC, Wallt)
+         nonconsuming Sell_Car : PnD
+           with car : Text
+                evaluator: Party
+                bank: Party
+           do
+                let agree = MyCar with seller = user; agree = car; evaluator = evaluator; bank = bank
+                agree <- create Pending with agree; seller = user; evaluator = user; bank = user
+                -- mecar <- create MyCar with seller = user; agree = car; evaluator = evaluator; bank = bank
+                -- walter <- create Wallet with owner = user; cash = 0.0
+
+                -- return (mecar, walter)
+                return agree
+
+    
+    controller user can
+        nonconsuming Buy_Car: Wallt
+            with cash_amount: Decimal
+            do 
+                walter <- create Wallet with owner = user; cash = cash_amount
+
+                return (walter)
+
+          
+
+    

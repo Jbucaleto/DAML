@@ -1,0 +1,13 @@
+daml 1.2 module Main.Wallet where
+
+type Wallt = ContractId Wallet
+
+template Wallet
+  with
+    owner: Party
+    cash: Decimal
+  where
+    ensure
+        cash >= 0.0
+    signatory owner
+    

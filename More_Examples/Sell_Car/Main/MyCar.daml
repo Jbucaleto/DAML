@@ -1,23 +1,48 @@
-daml 1.2 module MyCar where
+daml 1.2 module Main.MyCar where
 
-import DealerShip
+import Main.DealerShip
 
 type MC = ContractId MyCar
+type PnD = ContractId Pending
 
 template MyCar
     with
         seller : Party
-        car: Text
+        agree: Text
+        evaluator: Party
+        bank: Party
     where
 
-    signatory seller
+    signatory seller, evaluator, bank
+    agreement agree
 
-    controller seller can
-      nonconsuming Sell_my_Car : DS
-        with dealersh : [Party]
-        do
-            ds <- create DealerShippa with company = dealersh; seller
+template Pending
+    with
+        agree: MyCar
+        seller: Party
+        evaluator: Party
+        bank: Party
+    where
+        signatory seller, evaluator, bank
 
-            return (ds)
+        controller agree.evaluator can
+            Eva_Sign: PnD
+                do 
+                    create this with evaluator = agree.evaluator
+        
+        controller agree.bank can
+            Bank_Sign: PnD
+                do
+                    create this with bank = agree.bank
+
+
+
+    -- controller seller can
+    --   nonconsuming Sell_my_Car : DS
+    --     with dealersh : [Party]
+    --     do
+    --         ds <- create DealerShippa with company = dealersh; seller
+
+    --         return (ds)
           
     

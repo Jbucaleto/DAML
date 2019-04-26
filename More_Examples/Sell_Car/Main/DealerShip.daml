@@ -1,4 +1,4 @@
-daml 1.2 module DealerShip where
+daml 1.2 module Main.DealerShip where
 
 type DS = ContractId DealerShippa
 

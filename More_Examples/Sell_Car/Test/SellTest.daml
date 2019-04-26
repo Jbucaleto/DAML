@@ -1,0 +1,22 @@
+daml 1.2 module Test.SellTest where
+
+import Main.YourID
+import Main.MyCar
+
+
+
+makePartiesFrom names = mapA getParty names
+
+sellTest : Scenario ()
+sellTest = 
+  scenario do
+    [user, evaluator, bank] <- makePartiesFrom ["Bruce", "Wayne_corp", "Bank_of_Gotham"]
+
+
+    creatBruce <- submit user do create UserID with user
+
+    let agree = MyCar with seller = user; agree = "Volvo"; evaluator; bank
+    agree <- user `submit` do create Pending with agree; seller = user; evaluator = user; bank = user
+    -- (creatBruceCar) <- submit user do exercise creatBruce Sell_Car with car = "Volvo"; evaluator; bank
+
+    return ()
