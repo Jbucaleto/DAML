@@ -1,5 +1,7 @@
 daml 1.2 module Main.MyCar where
 
+import Main.YourID
+import Main.MyCar
 import Main.DealerShip
 
 type MC = ContractId MyCar
@@ -28,14 +30,16 @@ template Pending
         signatory seller, evaluator, bank
 
         controller agree.evaluator can
-            Eva_Sign: PnD
+            Eval_Sign: PnD
+                with new_price: Decimal
                 do 
-                    create this with evaluator = agree.evaluator
+                    create this with evaluator = agree.evaluator; sell_price = new_price
         
         controller agree.bank can
             Bank_Sign: PnD
+                with new_price: Decimal
                 do
-                    create this with bank = agree.bank
+                    create this with bank = agree.bank; sell_price = new_price
         
         controller seller can
             Sell_my_Car: DS
@@ -44,6 +48,10 @@ template Pending
 
                 assert (seller == agree.seller && evaluator == agree.evaluator && bank == agree.bank)
                 create DealerShippa with seller; vehicle = agree.vehicle; sell_price; company = dealer_ship
+        
+        controller seller can
+            Reject_new_Propose: ()
+                do return ()
 
 
 
@@ -54,5 +62,3 @@ template Pending
     --         ds <- create DealerShippa with company = dealersh; seller
 
     --         return (ds)
-          
-    

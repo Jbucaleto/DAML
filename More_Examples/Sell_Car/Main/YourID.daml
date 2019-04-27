@@ -1,9 +1,9 @@
 daml 1.2 module Main.YourID where
 
 import Main.MyCar
-import Main.Wallet
+import Main.DealerShip
 
-type ID = ContractId UserID
+type UID = ContractId UserID
 
 template UserID
   with
@@ -30,13 +30,13 @@ template UserID
                 return agree
 
     
-    controller user can
-        nonconsuming Buy_Car: Wallt
-            with cash_amount: Decimal
-            do 
-                walter <- create Wallet with owner = user; cash = cash_amount
+    -- controller user can
+    --     nonconsuming Buy_Car: Wallt
+    --         with cash_amount: Decimal
+    --         do 
+    --             walter <- create Wallet with owner = user; cash = cash_amount
 
-                return (walter)
+    --             return (walter)
 
           
 

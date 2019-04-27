@@ -2,7 +2,7 @@ daml 1.2 module Test.SellTest where
 
 import Main.YourID
 import Main.MyCar
-
+import Main.DealerShip
 
 
 makePartiesFrom names = mapA getParty names
@@ -20,11 +20,14 @@ sellTest =
     let agree = MyCar with seller = user; vehicle = "Volvo"; sell_price; evaluator; bank
     agree <- user `submit` do create Pending with agree; sell_price; seller = user; evaluator = user; bank = user
 
-    agree <- evaluator `submit` do exercise agree Eva_Sign
+    agree <- evaluator `submit` do exercise agree Eval_Sign with new_price = 36000.0
 
-    agree <- bank `submit` do exercise agree Bank_Sign
+    agree <- bank `submit` do exercise agree Bank_Sign with new_price = 34200.50
 
-    let compania = [company1, company2]
+    let compania = [company1]
     creatBruceCar <- user `submit` do exercise agree Sell_my_Car with dealer_ship = compania
+
+    -- creatCompanyOffer <- company1 `submit` do exercise creatBruceCar Accept_Sell with my_company = company1
+
 
     return ()
