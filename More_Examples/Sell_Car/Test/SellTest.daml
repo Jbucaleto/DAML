@@ -29,7 +29,7 @@ sellTest =
     let compania = [company1, company2]
     creatBruceCar <- user `submit` do exercise agree Sell_my_Car with dealer_ship = compania
 
-    creatCompanyOffer <- company2 `submit` do exercise creatBruceCar Accept_Sell with your_id = creatDCCar
+    creatCompanyOffer <- company2 `submit` do exercise creatBruceCar Accept_Sell with your_id = company2
 
 
     return ()

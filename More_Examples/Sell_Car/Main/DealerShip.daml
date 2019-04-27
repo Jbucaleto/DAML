@@ -22,18 +22,29 @@ template DealerShippa
     company : [Party]
   where
     signatory seller
+    observer company
+    
     
     controller seller can
       Add_More_Dealers : DS
         with new_dealer : Party
             do create this with company = new_dealer :: company
 
-    controller company can
-        Accept_Sell: COF
-            with your_id: UDS
-            do 
-                dsuser <- fetch your_id
-                create Company_Offer with seller = seller; vehicle = vehicle; company = dsuser.dealer
+    nonconsuming choice Accept_Sell : COF
+      with
+        your_id: Party
+       controller your_id
+        do
+          assert $ elem your_id company
+          create Company_Offer with seller = seller; vehicle = vehicle; company = your_id
+
+
+
+        -- Accept_Sell: COF
+        --     with your_id: UDS
+        --     do 
+        --         dsuser <- fetch your_id
+        --         create Company_Offer with seller = seller; vehicle = vehicle; company = dsuser.dealer
 
 template Company_Offer
     with 
