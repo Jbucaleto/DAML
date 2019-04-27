@@ -1,7 +1,5 @@
 daml 1.2 module Main.MyCar where
 
-import Main.YourID
-import Main.MyCar
 import Main.DealerShip
 
 type MC = ContractId MyCar

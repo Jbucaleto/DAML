@@ -1,5 +1,5 @@
-daml 1.2 module Imports where
+daml 1.2 module Main.Imports where
 
-import YourID()
-import MyCar()
-import DealerShip()
+import Main.YourID
+import Main.MyCar
+import Main.DealerShip

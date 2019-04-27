@@ -1,19 +1,18 @@
 daml 1.2 module Main.DealerShip where
 
-import Main.YourID
-import Main.MyCar
-
-
+-- import Main.YourID
+-- import Main.MyCar
 
 type DS = ContractId DealerShippa
 type COF = ContractId Company_Offer
+type UDS = ContractId UserDS
 
-template UserID
+template UserDS
   with
-    user : Party
-    -- typeSB: Text
+    dealer: Party
   where
-    signatory user
+    signatory dealer
+
 
 template DealerShippa
   with
@@ -29,11 +28,12 @@ template DealerShippa
         with new_dealer : Party
             do create this with company = new_dealer :: company
 
-    -- controller company can
-    --     Accept_Sell: COF
-    --         with your_id: ContractId UserID
-    --         do 
-    --             create Company_Offer with seller = seller; vehicle = vehicle; company
+    controller company can
+        Accept_Sell: COF
+            with your_id: UDS
+            do 
+                dsuser <- fetch your_id
+                create Company_Offer with seller = seller; vehicle = vehicle; company = dsuser.dealer
 
 template Company_Offer
     with 

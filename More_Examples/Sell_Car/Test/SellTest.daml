@@ -15,6 +15,8 @@ sellTest =
 
 
     creatBruce <- submit user do create UserID with user
+    creatDCCar <- submit company2 do create UserDS with dealer = company2
+
 
     let sell_price = 35800.0
     let agree = MyCar with seller = user; vehicle = "Volvo"; sell_price; evaluator; bank
@@ -24,10 +26,10 @@ sellTest =
 
     agree <- bank `submit` do exercise agree Bank_Sign with new_price = 34200.50
 
-    let compania = [company1]
+    let compania = [company1, company2]
     creatBruceCar <- user `submit` do exercise agree Sell_my_Car with dealer_ship = compania
 
-    -- creatCompanyOffer <- company1 `submit` do exercise creatBruceCar Accept_Sell with my_company = company1
+    creatCompanyOffer <- company2 `submit` do exercise creatBruceCar Accept_Sell with your_id = creatDCCar
 
 
     return ()
